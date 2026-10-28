@@ -1,4 +1,8 @@
 package com.ventrax.smartgn.support.domain.model.valueobjects;
 
-public class TicketStatus {
+public enum TicketStatus {
+    OPEN,
+    VISIT_REQUESTED,
+    RESOLVED,
+    CLOSED
 }
