@@ -6,12 +6,12 @@ import java.util.UUID;
 
 public class SupportResources {
     public record CreateArticleRequest(String title, String category, String contentReference) {}
-    public record CreateTechnicianRequest(String fullName, String accreditationCode, String email, String phone) {}
-    public record CreateTicketRequest(UUID principalAccountId, UUID meterId, String subject, String message) {}
+    public record CreateTechnicianRequest(String fullName, String accreditationCode, String specialty, String email, String phone) {}
+    public record UpdateTechnicianRequest(String accreditationCode, String specialty, String email, String phone, Boolean available, Boolean active) {}
+    public record CreateTicketRequest(UUID principalAccountId, UUID meterId, String subject, String description) {}
     public record AddReplyRequest(UUID authorAccountId, String body) {}
-    public record AddPhotoRequest(String objectReference, UUID uploadedByAccountId) {}
     public record RequestVisitRequest(Instant requestedWindowStart, Instant requestedWindowEnd) {}
     public record AssignTechnicianRequest(UUID technicianId) {}
-    public record CompleteVisitDiagnosisRequest(String summary, BigDecimal finalCost) {}
+    public record CompleteVisitDiagnosisRequest(String diagnosis, BigDecimal finalCost) {}
     public record RateTicketRequest(Integer score, String comment) {}
 }
