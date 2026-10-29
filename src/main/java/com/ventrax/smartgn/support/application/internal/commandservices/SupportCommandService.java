@@ -4,6 +4,7 @@ import com.ventrax.smartgn.support.application.outbound.BillingCoverageClient;
 import com.ventrax.smartgn.support.domain.model.aggregates.SupportTicket;
 import com.ventrax.smartgn.support.domain.model.aggregates.TechnicalVisit;
 import com.ventrax.smartgn.support.domain.model.entities.*;
+import com.ventrax.smartgn.support.domain.model.valueobjects.VisitStatus;
 import com.ventrax.smartgn.support.infrastructure.persistence.jpa.repositories.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,22 +55,32 @@ public class SupportCommandService {
         return articleRepo.save(new KnowledgeArticle(title, category, contentReference));
     }
 
-    public Technician createTechnician(String fullName, String accreditationCode, String email, String phone) {
-        return technicianRepo.save(new Technician(fullName, accreditationCode, email, phone));
+    public Technician createTechnician(String fullName, String accreditationCode, String specialty, String email, String phone) {
+        return technicianRepo.save(new Technician(fullName, accreditationCode, specialty, email, phone));
     }
 
-    public SupportTicket createTicket(UUID principalAccountId, UUID meterId, String subject, String message) {
-        return ticketRepo.save(new SupportTicket(principalAccountId, meterId, subject, message));
+    public Technician updateTechnician(UUID technicianId, String accreditationCode, String specialty, String email, String phone, Boolean available, Boolean active) {
+        Technician tech = technicianRepo.findById(technicianId)
+                .orElseThrow(() -> new IllegalArgumentException("Técnico no encontrado"));
+        tech.updateDetails(accreditationCode, specialty, email, phone, available, active);
+        return technicianRepo.save(tech);
+    }
+
+    public SupportTicket createTicket(UUID principalAccountId, UUID meterId, String subject, String description) {
+        UUID accountId = principalAccountId != null ? principalAccountId : UUID.fromString("11111111-1111-1111-1111-111111111111");
+        return ticketRepo.save(new SupportTicket(accountId, meterId, subject, description));
     }
 
     public TicketReply addReply(UUID ticketId, UUID authorAccountId, String body) {
         ticketRepo.findById(ticketId).orElseThrow(() -> new IllegalArgumentException("Ticket no encontrado"));
-        return replyRepo.save(new TicketReply(ticketId, authorAccountId, body));
+        UUID authorId = authorAccountId != null ? authorAccountId : UUID.fromString("11111111-1111-1111-1111-111111111111");
+        return replyRepo.save(new TicketReply(ticketId, authorId, body));
     }
 
     public TicketPhoto addPhoto(UUID ticketId, String objectReference, UUID uploadedByAccountId) {
         ticketRepo.findById(ticketId).orElseThrow(() -> new IllegalArgumentException("Ticket no encontrado"));
-        return photoRepo.save(new TicketPhoto(ticketId, objectReference, uploadedByAccountId));
+        UUID uploaderId = uploadedByAccountId != null ? uploadedByAccountId : UUID.fromString("11111111-1111-1111-1111-111111111111");
+        return photoRepo.save(new TicketPhoto(ticketId, objectReference, uploaderId));
     }
 
     public TechnicalVisit requestVisit(UUID ticketId, Instant windowStart, Instant windowEnd) {
@@ -92,9 +103,12 @@ public class SupportCommandService {
         return assignmentRepo.save(new TechnicianAssignment(visitId, technicianId));
     }
 
-    public VisitDiagnosis completeVisitWithDiagnosis(UUID visitId, String summary, BigDecimal finalCost) {
+    public VisitDiagnosis completeVisitWithDiagnosis(UUID visitId, String diagnosis, BigDecimal finalCost) {
         TechnicalVisit visit = visitRepo.findById(visitId)
                 .orElseThrow(() -> new IllegalArgumentException("Visita no encontrada"));
+        if (visit.getStatus() == VisitStatus.COMPLETED) {
+            throw new IllegalStateException("La visita técnica ya fue completada previamente.");
+        }
         visit.completeService();
         visitRepo.save(visit);
 
@@ -104,7 +118,7 @@ public class SupportCommandService {
         ticketRepo.save(ticket);
 
         UUID billingRef = billingClient.registerCompletedVisitCharge(visitId, finalCost);
-        return diagnosisRepo.save(new VisitDiagnosis(visitId, summary, finalCost, billingRef));
+        return diagnosisRepo.save(new VisitDiagnosis(visitId, diagnosis, finalCost, billingRef));
     }
 
     public SupportTicket closeTicket(UUID ticketId) {
