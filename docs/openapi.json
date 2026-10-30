@@ -1,0 +1,1997 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SmartGN - Support & Maintenance",
+    "description": "Knowledge articles, external gas technicians, tickets, private photographs, technical visits, diagnoses and service ratings. Owns an independent PostgreSQL database and integrates through authenticated HTTP and durable events. Local fixtures do not establish productive external integration.",
+    "license": {
+      "name": "MIT"
+    },
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8082",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Knowledge articles",
+      "description": "Active preventive guides and their publication."
+    },
+    {
+      "name": "Technicians",
+      "description": "Accredited external gas technicians and availability."
+    },
+    {
+      "name": "Tickets",
+      "description": "Authorized support cases, written resolution and principal-owned closure."
+    },
+    {
+      "name": "Ticket replies",
+      "description": "Chronological written attention and explicit remote resolution."
+    },
+    {
+      "name": "Ticket photographs",
+      "description": "Validated private image uploads and authorized downloads."
+    },
+    {
+      "name": "Technical visits",
+      "description": "Independent visit authorization, appointments, assignments and diagnoses."
+    },
+    {
+      "name": "Service ratings",
+      "description": "One principal-owned rating after eligible attention closes."
+    },
+    {
+      "name": "Internal support",
+      "description": "Private service-to-service contracts."
+    }
+  ],
+  "paths": {
+    "/api/v1/support/technicians/{technicianId}": {
+      "get": {
+        "tags": [
+          "Technicians"
+        ],
+        "summary": "Get an active technician",
+        "description": "Requires a current session. Returns accreditation, specialty, availability and contact data for an active technician. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "get",
+        "parameters": [
+          {
+            "name": "technicianId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Technician"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Technicians"
+        ],
+        "summary": "Update a technician record",
+        "description": "Requires SUPERADMIN. Updates accreditation, contact or availability while enforcing active-assignment constraints. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "updateTechnician",
+        "parameters": [
+          {
+            "name": "technicianId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTechnicianRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Technician"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/internal/v1/events": {
+      "post": {
+        "tags": [
+          "Internal support"
+        ],
+        "summary": "Receive a verified coverage decision",
+        "description": "Accepts CoverageCalculated for a completed owned visit. Checks final cost against the diagnosis and deduplicates equivalent business content across HTTP and MQTT. Authentication: private service credential; user JWTs are not accepted. Internal routes must remain outside public gateway routing.",
+        "operationId": "receive",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {}
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully."
+          },
+          "401": {
+            "description": "Missing or invalid private service credential."
+          }
+        },
+        "security": [
+          {
+            "serviceAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/visits/{visitId}/start": {
+      "post": {
+        "tags": [
+          "Technical visits"
+        ],
+        "summary": "Start a scheduled technical visit",
+        "description": "Requires SUPERADMIN and SCHEDULED state. Records the effective start of attention. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "start",
+        "parameters": [
+          {
+            "name": "visitId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TechnicalVisit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/visits/{visitId}/schedule": {
+      "post": {
+        "tags": [
+          "Technical visits"
+        ],
+        "summary": "Confirm a technical visit appointment",
+        "description": "Requires SUPERADMIN and an assigned visit. Confirms a valid future interval within the requested availability window. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "schedule",
+        "parameters": [
+          {
+            "name": "visitId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestVisitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TechnicalVisit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/visits/{visitId}/complete": {
+      "post": {
+        "tags": [
+          "Technical visits"
+        ],
+        "summary": "Complete a visit with its final diagnosis",
+        "description": "Requires SUPERADMIN and IN_PROGRESS state. Records performed work and final cost once, releases the technician and commits the Billing event locally. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "completeVisit",
+        "parameters": [
+          {
+            "name": "visitId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteVisitDiagnosisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Resource created.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitDiagnosis"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/visits/{visitId}/assign": {
+      "post": {
+        "tags": [
+          "Technical visits"
+        ],
+        "summary": "Assign or reassign a technician",
+        "description": "Requires SUPERADMIN, a reason and an eligible accredited technician. Preserves previous assignments and prevents simultaneous reservations. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "assignTechnician",
+        "parameters": [
+          {
+            "name": "visitId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTechnicianRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Resource created.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TechnicianAssignment"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/tickets": {
+      "get": {
+        "tags": [
+          "Tickets"
+        ],
+        "summary": "List accessible tickets",
+        "description": "Requires USE_TICKETS for authorized meters, or SUPERADMIN administration. Applies account/meter scope before status filtering and pagination. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "getTickets",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Optional lifecycle-status filter using the service's documented state values.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index. Default: 0.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Records per page, from 1 to 100. Default: 10.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "headers": {
+              "X-Total-Count": {
+                "description": "Number of records matching the authorized scope and filters.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupportTicket"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Tickets"
+        ],
+        "summary": "Open an authorized support ticket",
+        "description": "Requires USE_TICKETS on the meter. Principal ownership is resolved on the server; simulated or contradictory identities are rejected. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "createTicket",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTicketRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Resource created.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportTicket"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/tickets/{ticketId}/visits": {
+      "get": {
+        "tags": [
+          "Technical visits"
+        ],
+        "summary": "List authorized ticket visits",
+        "description": "Requires USE_VISITS independently of USE_TICKETS, or SUPERADMIN. Includes preserved technician-assignment history. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "getVisitsByTicket",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index. Default: 0.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Records per page, from 1 to 100. Default: 10.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "headers": {
+              "X-Total-Count": {
+                "description": "Number of records matching the authorized scope and filters.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TechnicalVisit"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Technical visits"
+        ],
+        "summary": "Request a technical visit",
+        "description": "Requires USE_VISITS and an unresolved ticket with a valid future availability interval. No advance payment is required; only one active visit is allowed. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "requestVisit",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestVisitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Resource created.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TechnicalVisit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/tickets/{ticketId}/replies": {
+      "get": {
+        "tags": [
+          "Ticket replies"
+        ],
+        "summary": "List authorized ticket replies",
+        "description": "Requires USE_TICKETS or SUPERADMIN. Returns chronological written history with page/size pagination. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "getReplies",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index. Default: 0.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Records per page, from 1 to 100. Default: 10.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "headers": {
+              "X-Total-Count": {
+                "description": "Number of records matching the authorized scope and filters.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TicketReply"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Ticket replies"
+        ],
+        "summary": "Add a ticket reply or written resolution",
+        "description": "Requires USE_TICKETS or SUPERADMIN on mutable tickets. Only SUPERADMIN may set resolve=true, and active visits prevent written resolution. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "addReply",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddReplyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Resource created.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/tickets/{ticketId}/rating": {
+      "get": {
+        "tags": [
+          "Service ratings"
+        ],
+        "summary": "Get an authorized service rating",
+        "description": "Requires ticket access. Returns the existing rating without changing ticket dates or state. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "getRating",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceRating"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Service ratings"
+        ],
+        "summary": "Rate closed owned attention",
+        "description": "Requires the principal owner and CLOSED state. Accepts a score from 1 to 5 once per ticket and preserves the original closure timestamp. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "rateTicket",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RateTicketRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Resource created.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceRating"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/tickets/{ticketId}/photos": {
+      "get": {
+        "tags": [
+          "Ticket photographs"
+        ],
+        "summary": "List authorized ticket photographs",
+        "description": "Requires USE_TICKETS or SUPERADMIN. Returns private photograph metadata with page/size pagination. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "getPhotos",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index. Default: 0.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Records per page, from 1 to 100. Default: 10.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "headers": {
+              "X-Total-Count": {
+                "description": "Number of records matching the authorized scope and filters.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TicketPhoto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Ticket photographs"
+        ],
+        "summary": "Attach a valid photograph",
+        "description": "Requires USE_TICKETS or SUPERADMIN on a mutable ticket. Requires a real JPEG/PNG file, at most 10 MiB and 25 million decoded pixels; arbitrary object references are rejected. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "addPhoto",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "objectReference",
+            "in": "query",
+            "description": "Deprecated; omit this parameter. Client-supplied storage references are rejected.",
+            "required": false,
+            "deprecated": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uploadedByAccountId",
+            "in": "query",
+            "description": "Deprecated; the uploader is derived from the authenticated session. A supplied value must match that identity.",
+            "required": false,
+            "deprecated": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A real JPEG or PNG multipart file is required. Maximum 10 MiB and 25 million decoded pixels. Storage references and uploader identity are resolved by the service.",
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Resource created.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketPhoto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/tickets/{ticketId}/close": {
+      "post": {
+        "tags": [
+          "Tickets"
+        ],
+        "summary": "Close an owned resolved ticket",
+        "description": "Requires the principal owner. Only RESOLVED tickets can close; financial delivery or payment status does not control technical closure. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "closeTicket",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportTicket"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/technicians": {
+      "get": {
+        "tags": [
+          "Technicians"
+        ],
+        "summary": "List active technicians",
+        "description": "Requires a current session. Filters active technicians by availability and specialty and applies page/size pagination. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "getTechnicians",
+        "parameters": [
+          {
+            "name": "available",
+            "in": "query",
+            "description": "Optional technician availability filter.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "specialty",
+            "in": "query",
+            "description": "Optional technician specialty filter.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index. Default: 0.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Records per page, from 1 to 100. Default: 10.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "headers": {
+              "X-Total-Count": {
+                "description": "Number of records matching the authorized scope and filters.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Technician"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Technicians"
+        ],
+        "summary": "Register an accredited technician",
+        "description": "Requires SUPERADMIN. Records an external gas technician without creating an IAM account. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "createTechnician",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTechnicianRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Resource created.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Technician"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/knowledge-articles": {
+      "get": {
+        "tags": [
+          "Knowledge articles"
+        ],
+        "summary": "List active knowledge articles",
+        "description": "Requires a current session. Filters active articles by category and applies page/size pagination. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "getArticles",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Optional knowledge-article category filter.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index. Default: 0.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Records per page, from 1 to 100. Default: 10.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "headers": {
+              "X-Total-Count": {
+                "description": "Number of records matching the authorized scope and filters.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KnowledgeArticle"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Knowledge articles"
+        ],
+        "summary": "Publish a knowledge article",
+        "description": "Requires SUPERADMIN. Stores title, category and the content reference for preventive guidance. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "createArticle",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArticleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Resource created.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeArticle"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/visits/{visitId}/diagnosis": {
+      "get": {
+        "tags": [
+          "Technical visits"
+        ],
+        "summary": "Get an authorized visit diagnosis",
+        "description": "Requires USE_VISITS independently of USE_TICKETS, or SUPERADMIN. Financial references remain absent until verified Billing evidence is received. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "getDiagnosis",
+        "parameters": [
+          {
+            "name": "visitId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitDiagnosis"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/tickets/{ticketId}": {
+      "get": {
+        "tags": [
+          "Tickets"
+        ],
+        "summary": "Get an authorized ticket",
+        "description": "Requires USE_TICKETS on the ticket's current owned meter, or SUPERADMIN administration. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "getTicketById",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportTicket"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support/tickets/{ticketId}/photos/{photoId}/download": {
+      "get": {
+        "tags": [
+          "Ticket photographs"
+        ],
+        "summary": "Download an authorized photograph",
+        "description": "Requires access to the parent ticket. Returns the original JPEG/PNG bytes through an authenticated route, not a public storage URL. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+        "operationId": "download",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
+            "in": "path",
+            "description": "Resource UUID. Possession of an identifier does not replace authorization.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully.",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked or invalid IAM session."
+          },
+          "403": {
+            "description": "The current account does not have the required role, ownership or meter/function permission."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UpdateTechnicianRequest": {
+        "type": "object",
+        "properties": {
+          "accreditationCode": {
+            "type": "string"
+          },
+          "specialty": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Technician": {
+        "type": "object",
+        "properties": {
+          "technicianId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "accreditationCode": {
+            "type": "string"
+          },
+          "specialty": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TechnicalVisit": {
+        "type": "object",
+        "properties": {
+          "visitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestedWindowStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requestedWindowEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "REQUESTED",
+              "ASSIGNED",
+              "SCHEDULED",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TechnicianAssignment"
+            }
+          },
+          "scheduledStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scheduledEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TechnicianAssignment": {
+        "type": "object",
+        "properties": {
+          "assignmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "visitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "technicianId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assignedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RequestVisitRequest": {
+        "type": "object",
+        "properties": {
+          "requestedWindowStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requestedWindowEnd": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CompleteVisitDiagnosisRequest": {
+        "type": "object",
+        "properties": {
+          "performedWork": {
+            "type": "string",
+            "minLength": 1
+          },
+          "diagnosis": {
+            "type": "string",
+            "minLength": 1
+          },
+          "finalCost": {
+            "type": "number",
+            "minimum": 0.0
+          }
+        },
+        "required": [
+          "diagnosis",
+          "finalCost",
+          "performedWork"
+        ]
+      },
+      "VisitDiagnosis": {
+        "type": "object",
+        "properties": {
+          "diagnosisId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "visitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "finalCost": {
+            "type": "number"
+          },
+          "billingReferenceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "performedWork": {
+            "type": "string"
+          }
+        }
+      },
+      "AssignTechnicianRequest": {
+        "type": "object",
+        "properties": {
+          "technicianId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "reason",
+          "technicianId"
+        ]
+      },
+      "CreateTicketRequest": {
+        "type": "object",
+        "properties": {
+          "principalAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "meterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 180,
+            "minLength": 0
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "description",
+          "meterId",
+          "subject"
+        ]
+      },
+      "SupportTicket": {
+        "type": "object",
+        "properties": {
+          "ticketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "principalAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "meterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "WRITTEN_SUPPORT",
+              "VISIT_REQUESTED",
+              "RESOLVED",
+              "CLOSED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resolvedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AddReplyRequest": {
+        "type": "object",
+        "properties": {
+          "authorAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1
+          },
+          "resolve": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "TicketReply": {
+        "type": "object",
+        "properties": {
+          "replyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "authorAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string"
+          },
+          "postedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RateTicketRequest": {
+        "type": "object",
+        "properties": {
+          "score": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 5,
+            "minimum": 1
+          },
+          "comment": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "score"
+        ]
+      },
+      "ServiceRating": {
+        "type": "object",
+        "properties": {
+          "ratingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "score": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "ratedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TicketPhoto": {
+        "type": "object",
+        "properties": {
+          "photoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "objectReference": {
+            "type": "string"
+          },
+          "uploadedByAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateTechnicianRequest": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 0
+          },
+          "accreditationCode": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 0
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "accreditationCode",
+          "email",
+          "fullName",
+          "phone"
+        ]
+      },
+      "CreateArticleRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 180,
+            "minLength": 0
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "contentReference": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "category",
+          "contentReference",
+          "title"
+        ]
+      },
+      "KnowledgeArticle": {
+        "type": "object",
+        "properties": {
+          "articleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "contentReference": {
+            "type": "string"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "description": "Current IAM JWT. The service verifies the active session and operation-specific ownership, role and meter/function permissions. Roles: USER and SUPERADMIN.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "serviceAuth": {
+        "type": "http",
+        "description": "Private service credential, independent of user JWTs. Internal routes must remain outside public gateway routing.",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
