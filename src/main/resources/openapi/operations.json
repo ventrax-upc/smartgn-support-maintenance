@@ -1,0 +1,242 @@
+{
+  "title": "SmartGN - Support & Maintenance",
+  "version": "v1",
+  "description": "Knowledge articles, external gas technicians, tickets, private photographs, technical visits, diagnoses and service ratings. Owns an independent PostgreSQL database and integrates through authenticated HTTP and durable events. Local fixtures do not establish productive external integration.",
+  "tags": {
+    "Knowledge articles": "Active preventive guides and their publication.",
+    "Technicians": "Accredited external gas technicians and availability.",
+    "Tickets": "Authorized support cases, written resolution and principal-owned closure.",
+    "Ticket replies": "Chronological written attention and explicit remote resolution.",
+    "Ticket photographs": "Validated private image uploads and authorized downloads.",
+    "Technical visits": "Independent visit authorization, appointments, assignments and diagnoses.",
+    "Service ratings": "One principal-owned rating after eligible attention closes.",
+    "Internal support": "Private service-to-service contracts."
+  },
+  "operations": [
+    {
+      "method": "GET",
+      "path": "/api/v1/support/knowledge-articles",
+      "tag": "Knowledge articles",
+      "summary": "List active knowledge articles",
+      "description": "Requires a current session. Filters active articles by category and applies page/size pagination. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/knowledge-articles",
+      "tag": "Knowledge articles",
+      "summary": "Publish a knowledge article",
+      "description": "Requires SUPERADMIN. Stores title, category and the content reference for preventive guidance. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 201,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/support/technicians",
+      "tag": "Technicians",
+      "summary": "List active technicians",
+      "description": "Requires a current session. Filters active technicians by availability and specialty and applies page/size pagination. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/technicians",
+      "tag": "Technicians",
+      "summary": "Register an accredited technician",
+      "description": "Requires SUPERADMIN. Records an external gas technician without creating an IAM account. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 201,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/support/technicians/{technicianId}",
+      "tag": "Technicians",
+      "summary": "Get an active technician",
+      "description": "Requires a current session. Returns accreditation, specialty, availability and contact data for an active technician. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/support/technicians/{technicianId}",
+      "tag": "Technicians",
+      "summary": "Update a technician record",
+      "description": "Requires SUPERADMIN. Updates accreditation, contact or availability while enforcing active-assignment constraints. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/support/tickets",
+      "tag": "Tickets",
+      "summary": "List accessible tickets",
+      "description": "Requires USE_TICKETS for authorized meters, or SUPERADMIN administration. Applies account/meter scope before status filtering and pagination. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/tickets",
+      "tag": "Tickets",
+      "summary": "Open an authorized support ticket",
+      "description": "Requires USE_TICKETS on the meter. Principal ownership is resolved on the server; simulated or contradictory identities are rejected. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 201,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/support/tickets/{ticketId}",
+      "tag": "Tickets",
+      "summary": "Get an authorized ticket",
+      "description": "Requires USE_TICKETS on the ticket's current owned meter, or SUPERADMIN administration. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/tickets/{ticketId}/close",
+      "tag": "Tickets",
+      "summary": "Close an owned resolved ticket",
+      "description": "Requires the principal owner. Only RESOLVED tickets can close; financial delivery or payment status does not control technical closure. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/support/tickets/{ticketId}/replies",
+      "tag": "Ticket replies",
+      "summary": "List authorized ticket replies",
+      "description": "Requires USE_TICKETS or SUPERADMIN. Returns chronological written history with page/size pagination. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/tickets/{ticketId}/replies",
+      "tag": "Ticket replies",
+      "summary": "Add a ticket reply or written resolution",
+      "description": "Requires USE_TICKETS or SUPERADMIN on mutable tickets. Only SUPERADMIN may set resolve=true, and active visits prevent written resolution. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 201,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/support/tickets/{ticketId}/photos",
+      "tag": "Ticket photographs",
+      "summary": "List authorized ticket photographs",
+      "description": "Requires USE_TICKETS or SUPERADMIN. Returns private photograph metadata with page/size pagination. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/tickets/{ticketId}/photos",
+      "tag": "Ticket photographs",
+      "summary": "Attach a valid photograph",
+      "description": "Requires USE_TICKETS or SUPERADMIN on a mutable ticket. Requires a real JPEG/PNG file, at most 10 MiB and 25 million decoded pixels; arbitrary object references are rejected. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 201,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/support/tickets/{ticketId}/photos/{photoId}/download",
+      "tag": "Ticket photographs",
+      "summary": "Download an authorized photograph",
+      "description": "Requires access to the parent ticket. Returns the original JPEG/PNG bytes through an authenticated route, not a public storage URL. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/support/tickets/{ticketId}/visits",
+      "tag": "Technical visits",
+      "summary": "List authorized ticket visits",
+      "description": "Requires USE_VISITS independently of USE_TICKETS, or SUPERADMIN. Includes preserved technician-assignment history. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/tickets/{ticketId}/visits",
+      "tag": "Technical visits",
+      "summary": "Request a technical visit",
+      "description": "Requires USE_VISITS and an unresolved ticket with a valid future availability interval. No advance payment is required; only one active visit is allowed. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 201,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/visits/{visitId}/assign",
+      "tag": "Technical visits",
+      "summary": "Assign or reassign a technician",
+      "description": "Requires SUPERADMIN, a reason and an eligible accredited technician. Preserves previous assignments and prevents simultaneous reservations. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 201,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/visits/{visitId}/schedule",
+      "tag": "Technical visits",
+      "summary": "Confirm a technical visit appointment",
+      "description": "Requires SUPERADMIN and an assigned visit. Confirms a valid future interval within the requested availability window. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/visits/{visitId}/start",
+      "tag": "Technical visits",
+      "summary": "Start a scheduled technical visit",
+      "description": "Requires SUPERADMIN and SCHEDULED state. Records the effective start of attention. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/visits/{visitId}/complete",
+      "tag": "Technical visits",
+      "summary": "Complete a visit with its final diagnosis",
+      "description": "Requires SUPERADMIN and IN_PROGRESS state. Records performed work and final cost once, releases the technician and commits the Billing event locally. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 201,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/support/visits/{visitId}/diagnosis",
+      "tag": "Technical visits",
+      "summary": "Get an authorized visit diagnosis",
+      "description": "Requires USE_VISITS independently of USE_TICKETS, or SUPERADMIN. Financial references remain absent until verified Billing evidence is received. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/support/tickets/{ticketId}/rating",
+      "tag": "Service ratings",
+      "summary": "Get an authorized service rating",
+      "description": "Requires ticket access. Returns the existing rating without changing ticket dates or state. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 200,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/tickets/{ticketId}/rating",
+      "tag": "Service ratings",
+      "summary": "Rate closed owned attention",
+      "description": "Requires the principal owner and CLOSED state. Accepts a score from 1 to 5 once per ticket and preserves the original closure timestamp. Authentication: current IAM JWT; roles are USER and SUPERADMIN.",
+      "success": 201,
+      "security": "bearerAuth"
+    },
+    {
+      "method": "POST",
+      "path": "/internal/v1/events",
+      "tag": "Internal support",
+      "summary": "Receive a verified coverage decision",
+      "description": "Accepts CoverageCalculated for a completed owned visit. Checks final cost against the diagnosis and deduplicates equivalent business content across HTTP and MQTT. Authentication: private service credential; user JWTs are not accepted. Internal routes must remain outside public gateway routing.",
+      "success": 200,
+      "security": "serviceAuth"
+    }
+  ]
+}
