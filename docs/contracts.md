@@ -12,4 +12,4 @@ Internal POST `/internal/v1/events` requires the service credential and accepts 
 
 TechnicalVisitCompleted HTTP delivery uses eventId, visitId, accountId, meterId, completedAt and cost at Billing's `/internal/v1/technical-visits/completions`. Optional MQTT_URL, MQTT_USERNAME and MQTT_PASSWORD enable QoS 1 publication to smartgn/events/support/TechnicalVisitCompleted. Consumers must deduplicate. No delivery is represented as financial confirmation.
 
-MQTT deployment requires an authenticated service principal allowed to publish smartgn/events/support/# and subscribe to smartgn/events/payments/CoverageCalculated. Configure a distinct MQTT_CLIENT_ID for each running instance. Notification consumers and S3 infrastructure are external deployment dependencies; the local service does not claim successful notification delivery.
+MQTT deployment requires an authenticated service principal allowed to publish smartgn/events/support/# and subscribe to smartgn/events/payments/CoverageCalculated. Configure a distinct MQTT_CLIENT_ID for each running instance. Operational events do not constitute notification-delivery confirmation.
