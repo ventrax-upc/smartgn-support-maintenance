@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: support-maintenance-service
+  boot:
+    admin:
+      client:
+        url: http://localhost:8085
   datasource:
     url: jdbc:postgresql://localhost:5432/smartgn_support_db
     username: postgres
@@ -17,6 +21,15 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
 
 springdoc:
   swagger-ui:
