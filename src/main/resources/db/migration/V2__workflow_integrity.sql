@@ -1,0 +1,10 @@
+ALTER TABLE technical_visits ADD COLUMN scheduled_start timestamptz, ADD COLUMN scheduled_end timestamptz, ADD COLUMN started_at timestamptz;
+ALTER TABLE visit_diagnoses ADD COLUMN performed_work text;
+ALTER TABLE visit_diagnoses ADD CONSTRAINT positive_cost CHECK(final_cost >= 0);
+CREATE UNIQUE INDEX one_active_visit ON technical_visits(ticket_id) WHERE visit_status NOT IN ('COMPLETED','CANCELLED');
+CREATE UNIQUE INDEX one_visit_assignment ON technician_assignments(visit_id) WHERE active;
+CREATE UNIQUE INDEX one_technician_assignment ON technician_assignments(technician_id) WHERE active;
+CREATE INDEX ticket_scope ON support_tickets(principal_account_id,meter_id,created_at);
+CREATE TABLE support_audit(id uuid PRIMARY KEY,actor_id uuid,action varchar(100) NOT NULL,resource_id uuid,detail text,created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE support_outbox(id uuid PRIMARY KEY,visit_id uuid NOT NULL UNIQUE,payload text NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),delivered_at timestamptz,attempts integer NOT NULL DEFAULT 0,next_attempt timestamptz NOT NULL DEFAULT now());
+CREATE TABLE support_inbox(id uuid PRIMARY KEY,payload text NOT NULL,created_at timestamptz NOT NULL DEFAULT now());

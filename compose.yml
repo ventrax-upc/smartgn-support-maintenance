@@ -1,0 +1,36 @@
+name: smartgn-support
+services:
+  db:
+    image: postgres:17.6
+    environment:
+      POSTGRES_DB: smartgn_support_db
+      POSTGRES_USER: smartgn_support
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+    ports: ["127.0.0.1:5435:5432"]
+    volumes: [support-db:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U smartgn_support -d smartgn_support_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  support:
+    build: .
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/smartgn_support_db
+      DB_PASSWORD: ${DB_PASSWORD}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?Set service token}
+      IAM_BASE_URL: ${IAM_BASE_URL:-http://host.docker.internal:8080}
+      INSTALLATION_BASE_URL: ${INSTALLATION_BASE_URL:-http://host.docker.internal:8081}
+      BILLING_BASE_URL: ${BILLING_BASE_URL:-http://host.docker.internal:8083}
+      MQTT_URL: ${MQTT_URL:-}
+      MQTT_USERNAME: ${MQTT_USERNAME:-support-service}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+      MQTT_CLIENT_ID: ${MQTT_CLIENT_ID:-smartgn-support}
+      PHOTO_PATH: /data/photos
+    ports: ["127.0.0.1:8082:8082"]
+    volumes: [support-photos:/data]
+    depends_on:
+      db: {condition: service_healthy}
+volumes:
+  support-db:
+  support-photos:
