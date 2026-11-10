@@ -2,34 +2,32 @@ server:
   port: ${PORT:8082}
 spring:
   application:
-    name: smartgn-support-maintenance
+    name: support-maintenance-service
+  boot:
+    admin:
+      client:
+        url: http://localhost:8085
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5435/smartgn_support_db}
     username: ${DB_USERNAME:smartgn_support}
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: validate
-    open-in-view: false
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 11MB
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
 management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: "*"
   endpoint:
     health:
-      probes:
-        enabled: true
-smartgn:
-  iam-url: ${IAM_BASE_URL:http://localhost:8080}
-  installation-url: ${INSTALLATION_BASE_URL:http://localhost:8081}
-  billing-url: ${BILLING_BASE_URL:http://localhost:8083}
-  internal-token: ${INTERNAL_SERVICE_TOKEN}
-  photo-path: ${PHOTO_PATH:.local/photos}
+      show-details: always
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
