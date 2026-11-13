@@ -1,0 +1,23 @@
+{
+  "service": "support",
+  "version": 1,
+  "records": [
+    {
+      "type": "ticket",
+      "alias": "demo-ticket-primary",
+      "account": "demo-account-pro",
+      "meter": "demo-supply-point-primary",
+      "subject": "Revisar lectura de consumo",
+      "description": "La lectura de prueba muestra un consumo inusual. Solicito una revisión."
+    },
+    {
+      "type": "technician",
+      "alias": "demo-support-technician",
+      "fullName": "SmartGN Demo Technician",
+      "accreditationCode": "LOCAL-SUPPORT-DEMO",
+      "specialty": "Gas maintenance",
+      "email": "support-technician@smartgn.test",
+      "phone": "999999999"
+    }
+  ]
+}

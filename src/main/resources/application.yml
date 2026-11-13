@@ -3,30 +3,46 @@ server:
 spring:
   application:
     name: support-maintenance-service
+  config:
+    import: ${SPRING_CONFIG_IMPORT:optional:configserver:${SMARTGN_CONFIG_URL:http://config:8088}}
   boot:
     admin:
       client:
-        url: http://localhost:8085
+        url: ${SMARTGN_ADMIN_URL:http://admin:8089}
+        username: ${SMARTGN_ADMIN_USERNAME:smartgn}
+        password: ${SMARTGN_ADMIN_PASSWORD:}
+        instance:
+          service-url: ${ADMIN_SERVICE_URL:http://support:8082}
+          management-url: ${ADMIN_MANAGEMENT_URL:http://support:8082/actuator}
+          health-url: ${ADMIN_HEALTH_URL:http://support:8082/actuator/health}
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5435/smartgn_support_db}
     username: ${DB_USERNAME:smartgn_support}
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+      ddl-auto: validate
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+
+smartgn:
+  iam-url: ${IAM_BASE_URL:http://localhost:8080}
+  installation-url: ${INSTALLATION_BASE_URL:http://localhost:8081}
+  billing-url: ${BILLING_BASE_URL:http://localhost:8083}
+  internal-token: ${INTERNAL_SERVICE_TOKEN}
+  photo-path: ${PHOTO_PATH:.local/photos}
 
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: health,info
   endpoint:
     health:
-      show-details: always
+      show-details: never
 
 springdoc:
   swagger-ui:
