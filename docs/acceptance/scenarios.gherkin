@@ -1,0 +1,42 @@
+# Source: Ventrax AV4 report. Acceptance specification; execution is verified separately.
+Feature: Support tickets, technical visits and service ratings
+
+  Scenario: Create a support ticket for an authorized meter
+    Given an authenticated user has permission to create tickets for meter A
+    When the user submits a valid ticket with a subject and description
+    Then Support registers the ticket and links it to meter A
+
+  Scenario: Reject a ticket for an unauthorized meter
+    Given a subuser has no ticket permission for meter B
+    When the subuser attempts to create or access a ticket for meter B
+    Then Support denies the operation without disclosing the protected resource
+
+  Scenario: Add a written reply and photograph
+    Given an authorized user has an open support ticket
+    When the user submits a valid written reply and an allowed photograph
+    Then Support preserves the reply and attachment in the ticket history
+
+  Scenario: Request a technical visit without advance payment
+    Given a ticket remains unresolved and the user has visit permission
+    When the user requests a visit and provides an availability interval
+    Then Support creates a linked visit without requiring prior payment
+
+  Scenario: Automatically assign an accredited technician
+    Given a visit is requested and an accredited technician is available
+    When the assignment policy executes
+    Then Support records the assigned technician and the corresponding visit state
+
+  Scenario: Restrict technician administration to SuperAdmin
+    Given an authenticated user does not have SuperAdmin role
+    When the user attempts to modify technician accreditation
+    Then Support denies the operation
+
+  Scenario: Complete a technical visit
+    Given a technical visit is in progress
+    When the final diagnosis and cost are recorded
+    Then Support completes the visit and makes its finalization information available to Billing
+
+  Scenario: Close and rate completed attention
+    Given a support ticket is resolved and belongs to the principal user
+    When the principal user confirms its closure and submits a valid rating
+    Then Support records the closed status and preserves the service rating
